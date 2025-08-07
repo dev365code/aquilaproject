@@ -11,9 +11,9 @@ from ..date_converter import DateConverter
 
 class StrategyWnt(Strategy):
     """
-    워뇨띠 매매법 기반 AI 자동화 전략
+    WNT 매매법 기반 AI 자동화 전략
     
-    Wonyotti Trading Method Based AI Automation Strategy
+    WNT Trading Method Based AI Automation Strategy
     
     핵심 원칙:
     1. 프랙탈 기반 패턴 분석 ("역사는 되풀이된다")
@@ -24,16 +24,16 @@ class StrategyWnt(Strategy):
     """
     
     CODE = "WNT"
-    NAME = "Wonyotti-AI-Strategy"
+    NAME = "WNT-AI-Strategy"
     
-    # 워뇨띠 핵심 설정값들 (피드백 반영)
+    # WNT 핵심 설정값들 (피드백 반영)
     COMMISSION_RATIO = 0.0005
     PATTERN_WINDOW = 20                    # 20봉 패턴 분석
     PATTERN_SIMILARITY_THRESHOLD = 0.85    # 85% 이상 유사도
     VOLUME_CONFIDENCE_MULTIPLIER = 1.5     # 평균 거래량의 1.5배 이상
-    MAX_HOLD_MINUTES = 10                  # 10분 내 결정 (워뇨띠 단타 스타일)
+    MAX_HOLD_MINUTES = 10                  # 10분 내 결정 (WNT 단타 스타일)
     
-    # 리스크 관리 (워뇨띠 원칙)
+    # 리스크 관리 (WNT 원칙)
     ISOLATED_MARGIN_RATIO = 0.2            # 시드의 20%만 사용
     MAX_LEVERAGE = 10                      # 격리 10배 (실질 풀시드 2배)
     PROFIT_TARGET_MIN = 0.01               # 최소 1% 익절
@@ -56,7 +56,7 @@ class StrategyWnt(Strategy):
         self.result = []
         self.request = None
         
-        # 워뇨띠 전용 상태 관리
+        # WNT 전용 상태 관리
         self.position_status = "EMPTY"      # EMPTY/BUYING/HOLDING/SELLING
         self.entry_price = 0
         self.entry_time = None
@@ -67,7 +67,7 @@ class StrategyWnt(Strategy):
         self.candle_buffer = deque(maxlen=300)  # 최대 300봉 저장
         self.volume_buffer = deque(maxlen=300)
         
-        # 워뇨띠 핵심 모듈들 (나중에 구현)
+        # WNT 핵심 모듈들 (나중에 구현)
         self.pattern_matcher = None         # 패턴 매칭 엔진
         self.volume_analyzer = None         # 거래량 분석기
         self.risk_manager = None            # 리스크 관리자
@@ -98,18 +98,18 @@ class StrategyWnt(Strategy):
         self.balance = budget
         self.min_price = min_price
         
-        # 워뇨띠 모듈들 초기화 (나중에 구현)
-        # self.pattern_matcher = WonyottiPatternMatcher()
-        # self.volume_analyzer = WonyottiVolumeAnalyzer() 
-        # self.risk_manager = WonyottiRiskManager(budget)
+        # WNT 모듈들 초기화 (나중에 구현)
+        # self.pattern_matcher = WntPatternMatcher()
+        # self.volume_analyzer = WntVolumeAnalyzer() 
+        # self.risk_manager = WntRiskManager(budget)
         
         self.logger.info(f"WNT Strategy initialized with budget: {budget}")
         
     def update_trading_info(self, info):
         """
-        새로운 거래 정보 업데이트 - 워뇨띠 방식으로 분석
+        새로운 거래 정보 업데이트 - WNT 방식으로 분석
         
-        워뇨띠 핵심 체크리스트:
+        WNT 핵심 체크리스트:
         1. 캔들 패턴 저장 및 분석
         2. 거래량 신뢰도 체크
         3. 프랙탈 패턴 매칭
@@ -130,11 +130,11 @@ class StrategyWnt(Strategy):
             
         self.data.append(copy.deepcopy(target))
         
-        # 워뇨띠 분석 프로세스
-        self._update_wonyotti_analysis(target)
+        # WNT 분석 프로세스
+        self._update_wnt_analysis(target)
         
-    def _update_wonyotti_analysis(self, candle_data):
-        """워뇨띠 방식의 시장 분석"""
+    def _update_wnt_analysis(self, candle_data):
+        """WNT 방식의 시장 분석"""
         try:
             current_price = candle_data["closing_price"]
             current_volume = candle_data.get("acc_volume", 0)
@@ -155,7 +155,7 @@ class StrategyWnt(Strategy):
             if len(self.candle_buffer) < self.PATTERN_WINDOW:
                 return
                 
-            # 1. 워뇨띠 거래량 신뢰도 체크
+            # 1. WNT 거래량 신뢰도 체크
             if not self._check_volume_confidence():
                 self.logger.debug("[WNT] Volume confidence too low, skipping analysis")
                 return
@@ -170,14 +170,14 @@ class StrategyWnt(Strategy):
             self.logger.error(f"[WNT] Analysis error: {err}")
             
     def _check_volume_confidence(self):
-        """워뇨띠 원칙: 거래량 신뢰도 체크"""
+        """WNT 원칙: 거래량 신뢰도 체크"""
         if len(self.volume_buffer) < 7:
             return False
             
         current_volume = self.volume_buffer[-1]
         avg_volume = np.mean(list(self.volume_buffer)[-7:])  # 최근 7개 평균
         
-        # 워뇨띠: "거래량이 신뢰할 만한 수준에 이르기 전에는 매매 안함"
+        # WNT: "거래량이 신뢰할 만한 수준에 이르기 전에는 매매 안함"
         volume_confidence = current_volume >= (avg_volume * self.VOLUME_CONFIDENCE_MULTIPLIER)
         
         if not volume_confidence:
@@ -186,21 +186,21 @@ class StrategyWnt(Strategy):
         return volume_confidence
         
     def _analyze_entry_opportunity(self, candle_data):
-        """매수 진입 기회 분석 - 워뇨띠 방식"""
+        """매수 진입 기회 분석 - WNT 방식"""
         # TODO: 프랙탈 패턴 매칭 구현
         # 현재는 기본 로직으로 대체
         
         current_pattern = list(self.candle_buffer)[-self.PATTERN_WINDOW:]
         
-        # 워뇨띠 패턴 체크 (임시 - 나중에 AI로 대체)
-        if self._is_wonyotti_buy_pattern(current_pattern):
+        # WNT 패턴 체크 (임시 - 나중에 AI로 대체)
+        if self._is_wnt_buy_pattern(current_pattern):
             self.position_status = "BUYING"
             self.entry_time = datetime.now()
             
             self.logger.info("[WNT] Entry pattern detected - preparing to buy")
         
     def _analyze_exit_opportunity(self, candle_data):
-        """매도 청산 기회 분석 - 워뇨띠 방식"""
+        """매도 청산 기회 분석 - WNT 방식"""
         if not self.entry_price or not self.entry_time:
             return
             
@@ -208,11 +208,11 @@ class StrategyWnt(Strategy):
         profit_ratio = (current_price - self.entry_price) / self.entry_price
         hold_time = (datetime.now() - self.entry_time).total_seconds() / 60  # 분 단위
         
-        # 워뇨띠 청산 조건들
+        # WNT 청산 조건들
         should_exit = False
         exit_reason = ""
         
-        # 1. 패턴 이탈 시 즉시 손절 (워뇨띠 핵심)
+        # 1. 패턴 이탈 시 즉시 손절 (WNT 핵심)
         if self._is_pattern_broken():
             should_exit = True
             exit_reason = "Pattern broken - immediate stop loss"
@@ -232,7 +232,7 @@ class StrategyWnt(Strategy):
             should_exit = True
             exit_reason = f"Hard stop loss: {profit_ratio:.2%}"
             
-        # 5. 시간 초과 (워뇨띠: 10분 내 결정)
+        # 5. 시간 초과 (WNT: 10분 내 결정)
         elif hold_time > self.MAX_HOLD_MINUTES:
             should_exit = True
             exit_reason = f"Time limit exceeded: {hold_time:.1f}min"
@@ -241,8 +241,8 @@ class StrategyWnt(Strategy):
             self.position_status = "SELLING" 
             self.logger.info(f"[WNT] Exit signal: {exit_reason}")
     
-    def _is_wonyotti_buy_pattern(self, pattern):
-        """워뇨띠 매수 패턴 감지 (임시 구현)"""
+    def _is_wnt_buy_pattern(self, pattern):
+        """WNT 매수 패턴 감지 (임시 구현)"""
         # TODO: 실제 프랙탈 패턴 매칭으로 교체
         if len(pattern) < 3:
             return False
@@ -271,9 +271,9 @@ class StrategyWnt(Strategy):
         
     def get_request(self):
         """
-        워뇨띠 방식 매매 요청 생성
+        WNT 방식 매매 요청 생성
         
-        워뇨띠 원칙:
+        WNT 원칙:
         - 확실한 패턴일 때만 진입
         - 빠른 결정과 실행
         - 분할 매매로 리스크 분산
@@ -286,11 +286,11 @@ class StrategyWnt(Strategy):
             if self.is_simulation and self.data:
                 current_time = self.data[-1]["date_time"]
                 
-            # 워뇨띠 매매 상태별 처리
+            # WNT 매매 상태별 처리
             if self.position_status == "BUYING":
-                return self._create_wonyotti_buy_request(current_time)
+                return self._create_wnt_buy_request(current_time)
             elif self.position_status == "SELLING":
-                return self._create_wonyotti_sell_request(current_time)
+                return self._create_wnt_sell_request(current_time)
                 
             return None
             
@@ -298,14 +298,14 @@ class StrategyWnt(Strategy):
             self.logger.error(f"[WNT] Request generation error: {err}")
             return None
             
-    def _create_wonyotti_buy_request(self, current_time):
-        """워뇨띠 방식 매수 요청"""
+    def _create_wnt_buy_request(self, current_time):
+        """WNT 방식 매수 요청"""
         if not self.data:
             return None
             
         current_price = float(self.data[-1]["closing_price"])
         
-        # 워뇨띠 자금 관리: 시드의 20%만 사용
+        # WNT 자금 관리: 시드의 20%만 사용
         available_budget = self.balance * self.ISOLATED_MARGIN_RATIO
         
         # 분할 매수 (3회 분할)
@@ -336,14 +336,14 @@ class StrategyWnt(Strategy):
         self.logger.info(f"[WNT] Buy request: {amount} at {current_price}")
         return [request]
         
-    def _create_wonyotti_sell_request(self, current_time):
-        """워뇨띠 방식 매도 요청"""
+    def _create_wnt_sell_request(self, current_time):
+        """WNT 방식 매도 요청"""
         if self.asset_amount <= 0:
             return None
             
         current_price = float(self.data[-1]["closing_price"])
         
-        # 전량 매도 (워뇨띠: 패턴 틀어지면 즉시 청산)
+        # 전량 매도 (WNT: 패턴 틀어지면 즉시 청산)
         amount = self.asset_amount
         
         amount = Decimal(str(amount)).quantize(Decimal("0.0001"), rounding=ROUND_DOWN)
@@ -364,9 +364,9 @@ class StrategyWnt(Strategy):
         
     def update_result(self, result):
         """
-        거래 결과 업데이트 - 워뇨띠 학습 방식
+        거래 결과 업데이트 - WNT 학습 방식
         
-        워뇨띠 방식:
+        WNT 방식:
         - 매 거래 후 패턴 성공률 업데이트
         - 수익 발생 시 일부 출금
         - 통계 추적으로 전략 개선
@@ -395,7 +395,7 @@ class StrategyWnt(Strategy):
             self.logger.error(f"[WNT] Result processing error: {err}")
             
     def _process_successful_trade(self, result):
-        """성공한 거래 처리 - 워뇨띠 방식"""
+        """성공한 거래 처리 - WNT 방식"""
         trade_type = result["type"]
         price = float(result["price"])
         amount = float(result["amount"])
@@ -430,7 +430,7 @@ class StrategyWnt(Strategy):
                 if profit_ratio > 0:
                     self.win_count += 1
                     
-                    # 워뇨띠 원칙: 수익 시 25% 출금
+                    # WNT 원칙: 수익 시 25% 출금
                     if profit_amount > 0:
                         withdrawal = profit_amount * self.WITHDRAWAL_RATIO
                         self.balance -= withdrawal
