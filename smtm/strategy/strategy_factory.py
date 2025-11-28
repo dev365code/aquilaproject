@@ -5,6 +5,7 @@ from .strategy_sma_ml import StrategySmaMl
 from .strategy_sma_dual_ml import StrategySmaDualMl
 from .strategy_sas import StrategySas
 from .strategy_hey import StrategyHey
+from .strategy_wnt import StrategyWnt
 
 
 class StrategyFactory:
@@ -22,6 +23,7 @@ class StrategyFactory:
         StrategySmaDualMl,
         StrategySas,
         StrategyHey,
+        StrategyWnt,
     ]
 
     @staticmethod
